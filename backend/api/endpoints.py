@@ -1,5 +1,5 @@
-from fastapi import APIRouter
-from backend.db.connect import org_collection, user_collection, match_collection
+from fastapi import APIRouter, HTTPException, Query
+from db.connect import org_collection, user_collection, match_collection
 
 router = APIRouter()
 
@@ -20,25 +20,25 @@ def create_trial():
     return {"message": "Create Trial"}
 
 @router.get("/orgs/{org_id}/")
-def get_trials_for_org():
-    return {"message": "Get Trials for Organization"}
+def get_trials_for_org(org_id: str):
+    return {"message": f"Get Trials for Organization {org_id}"}
 
 @router.get("/trials/{trial_id}")
-def get_match_for_trial():
-    return {"message": "Get Matched Users for Trial"}
+def get_match_for_trial(trial_id: str):
+    return {"message": f"Get Matched Users for Trial {trial_id}"}
 
 @router.get("/trials/{trial_id}/approved")
-def get_approve_for_trial():
-    return {"message": "Get Approved Users for Trial"}
+def get_approve_for_trial(trial_id: str):
+    return {"message": f"Get Approved Users for Trial {trial_id}"}
 
-@router.post("/match?trial={trial_id}&user_id={user_id}")
-def match():
-    return {"message": "Match"}
+@router.post("/match/")
+def match(trial_id: str = Query(...), user_id: str = Query(...)):
+    return {"message": f"Match User {user_id} to Trial {trial_id}"}
 
-@router.post("/approve?match_id={match_id}")
-def approve():
-    return {"message": "Approve"}
+@router.post("/approve/")
+def approve(match_id: str = Query(...)):
+    return {"message": f"Approved Match {match_id}"}
 
-@router.post("/reject?match_id={match_id}")
-def reject():
-    return {"message": "Reject"}
+@router.post("/reject/")
+def reject(match_id: str = Query(...)):
+    return {"message": f"Rejected Match {match_id}"}
