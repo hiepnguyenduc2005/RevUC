@@ -1,12 +1,10 @@
-from pydantic import BaseModel
-from typing import Literal
+from pydantic import BaseModel, EmailStr
+from typing import Literal, List
 
 class User(BaseModel):
     id: str
     name: str
-    username: str
-    password: str
-    email: str
+    email: EmailStr
 
 class Trial(BaseModel):
     id: str
@@ -24,10 +22,11 @@ class Organization(BaseModel):
     name: str
     username: str
     password: str
-    email: str
-    trials: list[Trial]
+    email: EmailStr
+    trials: List[Trial] = []
 
 class Match(BaseModel):
+    id: str
     trial_id: str
     user_id: str
     status: Literal["pending", "approved", "rejected"]
@@ -40,4 +39,4 @@ class Signup(BaseModel):
     name: str
     username: str
     password: str
-    email: str
+    email: EmailStr
