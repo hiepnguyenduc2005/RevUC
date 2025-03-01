@@ -1,10 +1,11 @@
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Request
 from db.connect import org_collection, user_collection, match_collection
-from models.schema import Signup, Organization
+from models.schema import Signup, Organization, Login
 import bcrypt
 from bson import ObjectId
 
 router = APIRouter()
+
 
 @router.get("/")
 def get_root():
@@ -15,9 +16,19 @@ def hash_password(password: str) -> str:
     return bcrypt.hashpw(password.encode(), salt).decode()
 
 @router.post("/login-org")
-def login_org():
-    # TODO
-    return {"message": "Login Organization"}
+async def login_org(org: Login):
+    username = org.username
+    password = org.password
+
+    user = await org_collection.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=400, detail="Invalid information")
+    
+    if not bcrypt.checkpw(password.encode(), user["password"].encode()):
+        raise HTTPException(status_code=400, detail="Invalid information")
+    
+    return {"message": "Login successful"}
+
 
 @router.post("/signup-org")
 async def signup_org(org: Signup):

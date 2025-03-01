@@ -9,7 +9,7 @@ MONGODB_URL = os.getenv("MONGODB_URL")
 if not MONGODB_URL:
     raise ValueError("MONGODB_URL is not set. Please check your .env file.")
 
-client = motor.motor_asyncio.AsyncIOMotorClient(MONGODB_URL)
+client = motor.motor_asyncio.AsyncIOMotorClient(MONGODB_URL, tls=True, tlsAllowInvalidCertificates=True)
 db = client.revuc
 
 org_collection = db.get_collection("organizations")
