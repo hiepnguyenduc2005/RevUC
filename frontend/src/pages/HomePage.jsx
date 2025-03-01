@@ -1,6 +1,6 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-import { Brain, ClipboardCheck, Users } from 'lucide-react'
+import { Brain, ClipboardCheck, Users, Heart } from 'lucide-react'
 
 const HomePage = () => {
   return (
@@ -30,7 +30,7 @@ const HomePage = () => {
           {/* Feature 1 */}
           <div className="card bg-base-100 shadow-xl">
             <div className="card-body items-center text-center">
-              <Flask className="h-16 w-16 text-primary mb-4 stroke-[1.5]" />
+              <Heart className="h-16 w-16 text-primary mb-4 stroke-[1.5]" />
               <h3 className="card-title text-2xl mb-4">Submit Health Data</h3>
               <p className="text-lg">Upload your medical documents or manually input your health information</p>
             </div>
