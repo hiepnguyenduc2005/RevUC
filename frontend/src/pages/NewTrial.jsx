@@ -22,7 +22,6 @@ const NewTrial = () => {
 
     const handlePhoneChange = (e) => {
         const value = e.target.value
-        // Only allow numbers
         if (value === '' || /^[0-9\b]+$/.test(value)) {
             setFormData({
                 ...formData,
