@@ -1,6 +1,6 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-import { Brain, ClipboardCheck, Users, Heart } from 'lucide-react'
+import { Brain, ClipboardCheck, Users, Heart, Building2, ArrowRight } from 'lucide-react'
 
 const HomePage = () => {
   return (
@@ -13,12 +13,20 @@ const HomePage = () => {
             <p className="text-2xl mb-12">
               Connecting volunteers with clinical trials through intelligent matching
             </p>
-            <Link 
-              to="/volunteer" 
-              className="btn btn-primary btn-lg text-xl px-12 py-8"
-            >
-              Check Your Eligibility
-            </Link>
+            <div className="flex flex-col md:flex-row gap-4 justify-center">
+              <Link 
+                to="/volunteer" 
+                className="btn btn-primary btn-lg text-xl px-8 py-4"
+              >
+                I'm a Volunteer
+              </Link>
+              <Link 
+                to="/signup" 
+                className="btn btn-secondary btn-lg text-xl px-8 py-4"
+              >
+                I'm an Organization
+              </Link>
+            </div>
           </div>
         </div>
       </div>
@@ -65,20 +73,67 @@ const HomePage = () => {
         </div>
       </div>
 
-      {/* CTA Section */}
+      {/* Dual CTA Section */}
       <div className="bg-base-100 py-20 px-8">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl font-bold mb-8">Ready to Find Your Match?</h2>
-          <p className="text-xl mb-12">
-            Join thousands of volunteers who have found suitable clinical trials through our platform. 
-            Your participation could help advance medical research and improve healthcare for everyone.
-          </p>
-          <Link 
-            to="/volunteer" 
-            className="btn btn-primary btn-lg text-xl px-12 py-8"
-          >
-            Start Your Journey
-          </Link>
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-4xl font-bold text-center mb-16">Join Our Platform</h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+            {/* Volunteer Card */}
+            <div className="card bg-primary text-primary-content shadow-xl">
+              <div className="card-body items-center text-center">
+                <h3 className="card-title text-3xl mb-4">For Volunteers</h3>
+                <p className="text-xl mb-8">
+                  Join thousands of volunteers who have found suitable clinical trials. Your participation could advance medical research.
+                </p>
+                <div className="card-actions">
+                  <Link to="/volunteer" className="btn btn-lg bg-white text-primary hover:bg-gray-100">
+                    Get Started <ArrowRight className="ml-2" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+            
+            {/* Organization Card */}
+            <div className="card bg-secondary text-secondary-content shadow-xl">
+              <div className="card-body items-center text-center">
+                <h3 className="card-title text-3xl mb-4">For Organizations</h3>
+                <p className="text-xl mb-8">
+                  Find eligible participants for your clinical trials. Our AI matching system connects you with suitable candidates.
+                </p>
+                <div className="card-actions">
+                  <Link to="/signup" className="btn btn-lg bg-white text-secondary hover:bg-gray-100">
+                    Sign Up <ArrowRight className="ml-2" />
+                  </Link>
+                  <Link to="/login" className="btn btn-lg btn-ghost">
+                    Log In
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Stats and Trust Indicators */}
+      <div className="py-16 px-8 bg-base-200">
+        <div className="max-w-6xl mx-auto text-center">
+          <div className="stats shadow mx-auto">
+            <div className="stat">
+              <div className="stat-title">Registered Trials</div>
+              <div className="stat-value">2,500+</div>
+            </div>
+            
+            <div className="stat">
+              <div className="stat-title">Volunteers Matched</div>
+              <div className="stat-value">50,000+</div>
+            </div>
+            
+            <div className="stat">
+              <div className="stat-title">Organizations</div>
+              <div className="stat-value">300+</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
