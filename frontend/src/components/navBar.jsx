@@ -24,7 +24,7 @@ const NavBar = () => {
                             <li><Link to="/create-request">Create New</Link></li>
                             <li>
                                 <details>
-                                    <summary className="text-lg">Welcome {authOrg.name}</summary>
+                                    <summary className="text-lg">Welcome {authOrg}</summary>
                                     <ul className="bg-base-100 rounded-t-none p-2">
                                         <li><a onClick={logout}>Logout</a></li>
                                     </ul>
