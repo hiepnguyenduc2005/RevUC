@@ -15,6 +15,11 @@ export const useAuthStore = create((set, get) => ({
         //handle api call with data
         set({ authOrg: {name: "logged in"} });
         
+    },
+
+    signup: async (data) => {
+        //handle api call with data
+        set({ authOrg: {name: "signed up"} });
     }
     
 }))

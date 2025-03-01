@@ -21,7 +21,7 @@ const NavBar = () => {
                     ) : (
                         // Logged in state
                         <>
-                            <li><Link to="/create-request">Create New</Link></li>
+                            <li><Link to="/create-trial">Create New</Link></li>
                             <li>
                                 <details>
                                     <summary className="text-lg">Welcome {authOrg.name}</summary>
