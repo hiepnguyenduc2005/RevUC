@@ -1,15 +1,24 @@
 import { useState } from 'react'
 import './App.css'
 import Navbar from './components/navBar.jsx'
+import {Routes, Route, Navigate} from "react-router-dom"
+import HomePage from './pages/HomePage.jsx'
+import SignUpPage from './pages/SignUpPage.jsx'
+import LoginPage from './pages/LoginPage.jsx' 
+import DashBoard from './pages/DashBoard.jsx'
+import { useAuthStore } from './store/useAuthStore.js'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const {authOrg} = useAuthStore()
 
   return (
     <div>
-      <Navbar />
-      <h1 className="text-3xl underline"> Hello world!</h1>
-      <button className="btn bg-blue-500 text-white p-2 rounded-md">Click me</button>
+      <Navbar/>
+      <Routes>
+        <Route path="/" element={authOrg ? <DashBoard/> : <HomePage/>}/>
+        <Route path="/signup" element={!authOrg ? <SignUpPage/> : <Navigate to="/"/>}/>
+        <Route path="/login" element={!authOrg ? <LoginPage/> : <Navigate to="/"/>}/>
+      </Routes>
     </div>
 
   )

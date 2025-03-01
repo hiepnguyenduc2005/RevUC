@@ -8,25 +8,25 @@ const NavBar = () => {
     return (
         <div className="navbar bg-base-100 shadow-sm">
             <div className="flex-1">
-                ClinSync
+                <Link to="/" className="btn btn-ghost text-2xl">ClinSync</Link>
             </div>
             <div className="flex-none">
                 <ul className="menu menu-horizontal px-1 text-lg">
                     {!authOrg ? (
                         // Not logged in state
                         <>
-                            <li>Org Login</li>
-                            <li>Org Signup</li>
+                            <li><Link to="/login">Org Login</Link></li>
+                            <li><Link to="/signup">Org Signup</Link></li>
                         </>
                     ) : (
                         // Logged in state
                         <>
-                            <li>Create New</li>
+                            <li><Link to="/create-request">Create New</Link></li>
                             <li>
                                 <details>
                                     <summary className="text-lg">Welcome {authOrg.name}</summary>
                                     <ul className="bg-base-100 rounded-t-none p-2">
-                                        <li><a onClick={logout}>Logout</a></li>
+                                        <li><button onClick={logout}>Logout</button></li>
                                     </ul>
                                 </details>
                             </li>
