@@ -43,19 +43,19 @@ const SignUpPage = () => {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-base-200 p-8">
-            <div className="card w-full max-w-4xl bg-base-100 shadow-2xl">
-                <div className="card-body p-12">
-                    <h2 className="card-title justify-center text-5xl font-bold mb-12">Organization Sign Up</h2>
+        <div className="h-screen flex items-center justify-center bg-base-200 p-4" style={{ overflow: 'hidden' }}>
+            <div className="card w-full max-w-3xl bg-base-100 shadow-xl">
+                <div className="card-body p-6">
+                    <h2 className="card-title justify-center text-3xl font-bold mb-4">Organization Sign Up</h2>
                     {error && (
-                        <div className="alert alert-error text-lg mb-6">
+                        <div className="alert alert-error text-md mb-3">
                             {error}
                         </div>
                     )}
-                    <form onSubmit={handleSubmit} className="space-y-8">
+                    <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="form-control">
                             <label className="label">
-                                <span className="label-text text-2xl mb-2">Organization Name</span>
+                                <span className="label-text text-lg">Organization Name</span>
                             </label>
                             <input 
                                 type="text" 
@@ -63,12 +63,12 @@ const SignUpPage = () => {
                                 value={formData.orgName}
                                 onChange={handleChange}
                                 placeholder="Enter organization name" 
-                                className="input input-bordered input-lg w-full text-xl py-8" 
+                                className="input input-bordered w-full text-md py-2" 
                             />
                         </div>
                         <div className="form-control">
                             <label className="label">
-                                <span className="label-text text-2xl mb-2">Organization Email</span>
+                                <span className="label-text text-lg">Organization Email</span>
                             </label>
                             <input 
                                 type="email" 
@@ -76,12 +76,12 @@ const SignUpPage = () => {
                                 value={formData.email}
                                 onChange={handleChange}
                                 placeholder="Enter organization email" 
-                                className="input input-bordered input-lg w-full text-xl py-8" 
+                                className="input input-bordered w-full text-md py-2" 
                             />
                         </div>
                         <div className="form-control">
                             <label className="label">
-                                <span className="label-text text-2xl mb-2">Password</span>
+                                <span className="label-text text-lg">Password</span>
                             </label>
                             <input 
                                 type="password" 
@@ -89,12 +89,12 @@ const SignUpPage = () => {
                                 value={formData.password}
                                 onChange={handleChange}
                                 placeholder="Enter password" 
-                                className={`input input-bordered input-lg w-full text-xl py-8 ${error && 'input-error'}`}
+                                className={`input input-bordered w-full text-md py-2 ${error && 'input-error'}`}
                             />
                         </div>
                         <div className="form-control">
                             <label className="label">
-                                <span className="label-text text-2xl mb-2">Confirm Password</span>
+                                <span className="label-text text-lg">Confirm Password</span>
                             </label>
                             <input 
                                 type="password" 
@@ -102,16 +102,16 @@ const SignUpPage = () => {
                                 value={formData.confirmPassword}
                                 onChange={handleChange}
                                 placeholder="Confirm your password" 
-                                className={`input input-bordered input-lg w-full text-xl py-8 ${error && 'input-error'}`}
+                                className={`input input-bordered w-full text-md py-2 ${error && 'input-error'}`}
                             />
                         </div>
-                        <div className="form-control mt-12">
-                            <button type="submit" className="btn btn-primary btn-lg text-xl py-8">Sign Up</button>
+                        <div className="form-control mt-6">
+                            <button type="submit" className="btn btn-primary text-md py-2">Sign Up</button>
                         </div>
                     </form>
-                    <p className="text-center mt-8 text-xl">
+                    <p className="text-center mt-4 text-md">
                         Already have an account? 
-                        <Link to="/login" className="link link-primary ml-3 font-semibold">Login</Link>
+                        <Link to="/login" className="link link-primary ml-2 font-semibold">Login</Link>
                     </p>
                 </div>
             </div>
