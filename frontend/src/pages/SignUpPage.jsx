@@ -7,7 +7,7 @@ const SignUpPage = () => {
     const [error, setError] = useState('')
 
     const [formData, setFormData] = useState({
-        orgName: '',
+        name: '',
         email: '',
         password: '',
         confirmPassword: ''
@@ -37,9 +37,12 @@ const SignUpPage = () => {
             return
         }
 
+        // Create new object without confirmPassword
+        const { confirmPassword, ...signupData } = formData
+
         // If validation passes, proceed with signup
-        console.log(formData)
-        signup(formData)
+        console.log(signupData)
+        signup(signupData)
     }
 
     return (
@@ -59,8 +62,8 @@ const SignUpPage = () => {
                             </label>
                             <input 
                                 type="text" 
-                                name="orgName"
-                                value={formData.orgName}
+                                name="name"
+                                value={formData.name}
                                 onChange={handleChange}
                                 placeholder="Enter organization name" 
                                 className="input input-bordered input-lg w-full text-xl py-8" 

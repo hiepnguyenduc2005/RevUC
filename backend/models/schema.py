@@ -21,7 +21,6 @@ class Trial(BaseModel):
 
 class Organization(BaseModel):
     name: str
-    username: str
     password: str
     email: EmailStr
     trials: List[Trial] = []
@@ -32,12 +31,11 @@ class Match(BaseModel):
     status: Literal["pending", "approved", "rejected"]
 
 class Login(BaseModel):
-    username: str
+    email: str
     password: str
 
 class Signup(BaseModel):
     name: str
-    username: str
     password: str
     email: EmailStr
 
