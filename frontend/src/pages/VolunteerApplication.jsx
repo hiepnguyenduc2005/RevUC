@@ -19,6 +19,7 @@ const VolunteerApplication = () => {
   })
 
   const [files, setFiles] = useState([])
+  const [matching, setMatching] = useState({})
   const [uploadStatus, setUploadStatus] = useState({
     isUploading: false,
     success: false,
