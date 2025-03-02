@@ -26,7 +26,6 @@ async def login_org(org: Login):
     
     if not bcrypt.checkpw(password.encode(), user["password"].encode()):
         raise HTTPException(status_code=400, detail="Invalid information")
-    
     return {"name": user["name"], "email": user["email"], "id": str(user["_id"])}
 
 
@@ -137,7 +136,6 @@ async def create_match(newMatch: NewMatch):
         return {"message": str(e)}
 
 
-
 @router.get("/trials/{trial_id}")
 async def get_match_for_trial(trial_id: str):
     matches_cursor = match_collection.find({"trial_id": trial_id})
@@ -146,7 +144,7 @@ async def get_match_for_trial(trial_id: str):
         {
             "user_id": match.get("user_id"), 
             "match_id": str(match.get("_id")),
-            "status": match.get("status", "pending")  # Include status field with default
+            "status": match.get("status", "pending")  
         } 
         for match in matches
     ]

@@ -43,6 +43,20 @@ class NewUser(BaseModel):
     name: str
     email: EmailStr
 
+class Volunteer(BaseModel):
+    name: str
+    email: EmailStr
+    phone: str
+    dateOfBirth: str
+    gender: str
+    height: str
+    weight: str
+    medicalConditions: str
+    medications: str
+    allergies: str
+    pastSurgeries: str
+    files: List[str]
+
 
 class NewMatch(BaseModel):
 	trial_id: str
