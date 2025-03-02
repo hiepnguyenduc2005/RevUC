@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Query, Request
 from db.connect import org_collection, user_collection, match_collection
-from models.schema import Signup, Organization, Login
+from models.schema import Signup, Organization, Login, User, NewUser
 import bcrypt
 from bson import ObjectId
 
@@ -48,11 +48,21 @@ async def signup_org(org: Signup):
     result = await org_collection.insert_one(new_org)
     return {"name": org.name, "email": org.email, "id": str(result.inserted_id)}
 
-def create_user(user):
-    # TODO
-
-    return user_collection.insert_one(user)
-
+@router.post("/create-user")
+async def create_user(user: NewUser):
+    existing_user = await user_collection.find_one({"email": user.email})
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Email already exists.")
+    
+    new_user = User(
+        name=user.name,
+        email=user.email,
+        report=""
+    ).dict()
+    result = await user_collection.insert_one(new_user)
+    print(result)
+    return {"message": "Create successful", "id": str(result.inserted_id)}
+    
 @router.post("/trials")
 def create_trial():
     return {"message": "Create Trial"}

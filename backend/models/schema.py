@@ -4,6 +4,7 @@ from typing import Literal, List
 class User(BaseModel):
     name: str
     email: EmailStr
+    report: str
 
 class Trial(BaseModel):
     org_id: str
@@ -17,6 +18,7 @@ class Trial(BaseModel):
 
 class Organization(BaseModel):
     name: str
+    username: str
     password: str
     email: EmailStr
     trials: List[Trial] = []
@@ -27,10 +29,15 @@ class Match(BaseModel):
     status: Literal["pending", "approved", "rejected"]
 
 class Login(BaseModel):
-    email: EmailStr
+    username: str
     password: str
 
 class Signup(BaseModel):
     name: str
+    username: str
     password: str
+    email: EmailStr
+
+class NewUser(BaseModel):
+    name: str
     email: EmailStr
