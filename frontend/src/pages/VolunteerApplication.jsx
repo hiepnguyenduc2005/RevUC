@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
-import { Upload, Check, X } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { Upload, Check, X, FileText, Loader } from 'lucide-react'
+import { createWorker } from 'tesseract.js'
 
 const VolunteerApplication = () => {
   const [formData, setFormData] = useState({
@@ -23,6 +24,161 @@ const VolunteerApplication = () => {
     success: false,
     error: null
   })
+  const [processingFiles, setProcessingFiles] = useState(false)
+  const [processingProgress, setProcessingProgress] = useState(0)
+  
+  // State for Pyodide instance
+  const [pyodide, setPyodide] = useState(null)
+
+  // Load Pyodide
+  useEffect(() => {
+    if (!window.pyodide) {
+      const script = document.createElement('script')
+      script.src = "https://cdn.jsdelivr.net/pyodide/v0.18.1/full/pyodide.js"
+      script.onload = async () => {
+        try {
+          const loadedPyodide = await window.loadPyodide({
+            indexURL: "https://cdn.jsdelivr.net/pyodide/v0.18.1/full/"
+          })
+          setPyodide(loadedPyodide)
+          console.log("Pyodide loaded successfully")
+        } catch (error) {
+          console.error('Failed to load Pyodide:', error)
+        }
+      }
+      document.body.appendChild(script)
+    }
+  }, [])
+
+  // Write file to Pyodide's virtual file system
+  const writeFileToPyodideFS = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = async (e) => {
+        const data = new Uint8Array(e.target.result)
+        try {
+          pyodide.FS.writeFile(file.name, data)
+          resolve()
+        } catch (error) {
+          reject(error)
+        }
+      }
+      reader.onerror = () => reject(reader.error)
+      reader.readAsArrayBuffer(file)
+    })
+  }
+
+  // Use Pyodide and PyPDF2 to extract text from a PDF file
+  const extractTextFromPDF = async (file) => {
+    if (!pyodide) {
+      console.error("Pyodide is not loaded yet")
+      return "Pyodide is not loaded yet. Please try again in a moment."
+    }
+    try {
+      // Write the PDF file into Pyodide's file system
+      await writeFileToPyodideFS(file)
+
+      // Load micropip and install PyPDF2 if necessary
+      await pyodide.loadPackage(['micropip'])
+      await pyodide.runPythonAsync(`
+        import micropip
+        await micropip.install('PyPDF2')
+      `)
+
+      // Run Python code to extract text from the PDF
+      const result = await pyodide.runPythonAsync(`
+        import PyPDF2
+
+        def extract_text_from_pdf(pdf_path):
+            with open(pdf_path, "rb") as f:
+                reader = PyPDF2.PdfReader(f)
+                text = ""
+                for page in reader.pages:
+                    page_text = page.extract_text() or ""
+                    text += page_text
+            return text
+
+        extract_text_from_pdf("${file.name}")
+      `)
+      
+      return result
+    } catch (error) {
+      console.error("Error extracting text from PDF using Pyodide:", error)
+      return `[Error extracting text from ${file.name}: ${error.message}]`
+    }
+  }
+
+  // Use tesseract.js to extract text from image files
+  const extractTextFromImage = async (file) => {
+    try {
+      const worker = await createWorker('eng')
+      const imageUrl = URL.createObjectURL(file)
+      const { data } = await worker.recognize(imageUrl)
+      await worker.terminate()
+      URL.revokeObjectURL(imageUrl)
+      return data.text.trim()
+    } catch (error) {
+      console.error('Error extracting text from image:', error)
+      return `[Error extracting text from ${file.name}: ${error.message}]`
+    }
+  }
+
+  // Process the uploaded files
+  const processFiles = async (selectedFiles) => {
+    setProcessingFiles(true)
+    setProcessingProgress(0)
+    
+    const newFiles = []
+    for (let i = 0; i < selectedFiles.length; i++) {
+      const file = selectedFiles[i]
+      let extractedText = ''
+      
+      setProcessingProgress((i / selectedFiles.length) * 100)
+      
+      if (file.type === 'application/pdf') {
+        extractedText = await extractTextFromPDF(file)
+      } else if (file.type.startsWith('image/')) {
+        extractedText = await extractTextFromImage(file)
+      }
+      
+      newFiles.push({
+        file: file,
+        name: file.name,
+        type: file.type,
+        text: extractedText
+      })
+    }
+    
+    setFiles([...files, ...newFiles])
+    setFormData(prev => ({
+      ...prev,
+      files: [...prev.files, ...newFiles.map(f => ({
+        name: f.name,
+        type: f.type,
+        text: f.text
+      }))]
+    }))
+    
+    setProcessingFiles(false)
+    setProcessingProgress(100)
+  }
+
+  const handleFileChange = async (e) => {
+    const selectedFiles = Array.from(e.target.files)
+    if (selectedFiles.length > 0) {
+      await processFiles(selectedFiles)
+    }
+  }
+
+  const removeFile = (index) => {
+    const updatedFiles = [...files]
+    const removedFile = updatedFiles.splice(index, 1)[0]
+    setFiles(updatedFiles)
+    setFormData(prev => ({
+      ...prev,
+      files: prev.files.filter(f => f.name !== removedFile.name)
+    }))
+  }
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -30,17 +186,6 @@ const VolunteerApplication = () => {
       ...formData,
       [name]: value
     })
-  }
-
-  const handleFileChange = (e) => {
-    const selectedFiles = Array.from(e.target.files)
-    setFiles([...files, ...selectedFiles])
-  }
-
-  const removeFile = (index) => {
-    const updatedFiles = [...files]
-    updatedFiles.splice(index, 1)
-    setFiles(updatedFiles)
   }
 
   const handleSubmit = (e) => {
@@ -267,11 +412,22 @@ const VolunteerApplication = () => {
                 <div className="flex items-center justify-center w-full">
                   <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-base-200 border-base-300 hover:border-primary hover:bg-base-300">
                     <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                      <Upload className="w-10 h-10 mb-3 text-gray-500" />
-                      <p className="mb-2 text-sm text-gray-500">
-                        <span className="font-semibold">Click to upload</span> or drag and drop
-                      </p>
-                      <p className="text-xs text-gray-500">PDF, JPG, PNG (MAX. 10MB per file)</p>
+                      {processingFiles ? (
+                        <>
+                          <Loader className="w-10 h-10 mb-3 text-gray-500 animate-spin" />
+                          <p className="mb-2 text-sm text-gray-500">
+                            Processing files ({Math.round(processingProgress)}%)
+                          </p>
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="w-10 h-10 mb-3 text-gray-500" />
+                          <p className="mb-2 text-sm text-gray-500">
+                            <span className="font-semibold">Click to upload</span> or drag and drop
+                          </p>
+                          <p className="text-xs text-gray-500">PDF, JPG, PNG (MAX. 10MB per file)</p>
+                        </>
+                      )}
                     </div>
                     <input 
                       id="dropzone-file" 
@@ -279,7 +435,8 @@ const VolunteerApplication = () => {
                       accept=".pdf,.jpg,.jpeg,.png"
                       multiple 
                       onChange={handleFileChange}
-                      className="hidden" 
+                      className="hidden"
+                      disabled={processingFiles}
                     />
                   </label>
                 </div>
@@ -290,18 +447,33 @@ const VolunteerApplication = () => {
                   <h3 className="font-medium mb-2">Uploaded Files:</h3>
                   <ul className="space-y-2">
                     {files.map((file, index) => (
-                      <li key={index} className="flex items-center justify-between bg-base-100 p-2 rounded">
-                        <div className="flex items-center">
-                          <span className="mr-2 text-xl">{getFileIcon(file.type)}</span>
-                          <span className="truncate max-w-xs">{file.name}</span>
+                      <li key={index} className="bg-base-100 p-2 rounded">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center">
+                            <span className="mr-2 text-xl">{getFileIcon(file.type)}</span>
+                            <span className="truncate max-w-xs">{file.name}</span>
+                          </div>
+                          <button 
+                            type="button"
+                            onClick={() => removeFile(index)}
+                            className="btn btn-sm btn-circle btn-ghost"
+                            disabled={processingFiles}
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
                         </div>
-                        <button 
-                          type="button"
-                          onClick={() => removeFile(index)}
-                          className="btn btn-sm btn-circle btn-ghost"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
+                        {file.text && (
+                          <div className="mt-1">
+                            <div className="flex items-center text-sm text-gray-500 mb-1">
+                              <FileText className="h-4 w-4 mr-1" />
+                              <span>Extracted Text:</span>
+                            </div>
+                            <div className="bg-base-200 p-2 rounded text-sm max-h-32 overflow-y-auto">
+                              {file.text.substring(0, 300)}
+                              {file.text.length > 300 && '...'}
+                            </div>
+                          </div>
+                        )}
                       </li>
                     ))}
                   </ul>
@@ -311,10 +483,10 @@ const VolunteerApplication = () => {
               <div className="flex justify-center mt-8">
                 <button 
                   type="submit"
-                  className={`btn btn-primary btn-lg px-12 ${uploadStatus.isUploading ? 'loading' : ''}`}
-                  disabled={uploadStatus.isUploading}
+                  className={`btn btn-primary btn-lg px-12 ${uploadStatus.isUploading || processingFiles ? 'loading' : ''}`}
+                  disabled={uploadStatus.isUploading || processingFiles}
                 >
-                  {uploadStatus.isUploading ? 'Submitting...' : 'Submit Application'}
+                  {uploadStatus.isUploading ? 'Submitting...' : processingFiles ? 'Processing Files...' : 'Submit Application'}
                 </button>
               </div>
             </form>
