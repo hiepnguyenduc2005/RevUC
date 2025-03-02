@@ -52,8 +52,8 @@ async def signup_org(org: Signup):
 async def create_user(user: NewUser):
     existing_user = await user_collection.find_one({"email": user.email})
     if existing_user:
-        raise HTTPException(status_code=400, detail="Email already exists.")
-    
+        return {"message": "User already exists", "id": str(existing_user["_id"])}
+
     new_user = User(
         name=user.name,
         email=user.email,
@@ -106,7 +106,7 @@ async def get_trials_for_org(org_id: str):
         "trials": trials
     }
 
-@router.post("/test")
+# @router.post("/test")
 async def create_match(newMatch: NewMatch):
     trial_id = newMatch.trial_id
     user_id = newMatch.user_id
