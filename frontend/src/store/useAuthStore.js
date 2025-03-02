@@ -14,15 +14,19 @@ export const useAuthStore = create((set, get) => ({
     login: async (data) => {
         try {
             const response = await axiosInstance.post("/login-org", data); 
-            set({ authOrg: {name: "logged in"} });
+            set({ authOrg: response.data });
         } catch (error) {
             console.log(error)
         }
     },
 
     signup: async (data) => {
-        //handle api call with data
-        set({ authOrg: {name: "signed up"} });
+        try {
+            const response = await axiosInstance.post("/signup-org", data); 
+            set({ authOrg: response.data });
+        } catch (error) {
+            console.log(error)
+        }
     }
     
 }))
