@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Upload, Check, X, FileText, Loader } from 'lucide-react'
 import { createWorker } from 'tesseract.js'
+import { axiosInstance } from '../lib/axios'
 
 const VolunteerApplication = () => {
   const [formData, setFormData] = useState({
@@ -26,9 +27,42 @@ const VolunteerApplication = () => {
   })
   const [processingFiles, setProcessingFiles] = useState(false)
   const [processingProgress, setProcessingProgress] = useState(0)
-  
+  const [clicked, setClicked] = useState({});
+
   // State for Pyodide instance
   const [pyodide, setPyodide] = useState(null)
+  const [matches, setMatches] = useState([])
+  const [userId, setUserId] = useState(null)
+  const [trials, setTrials] = useState({})
+
+  const fetchTrials = async (matchIds) => {
+    const trialDetails = {}
+    for (const trialId of matchIds) {
+      try {
+        const response = await axiosInstance.get(`/trials/${trialId}/info`)
+        trialDetails[trialId] = response.data.user // API returns { "message": "...", "user": trial }
+      } catch (error) {
+        console.error(`Error fetching trial ${trialId}:`, error)
+      }
+    }
+    setTrials(trialDetails)
+  }
+
+  const handleMatch = async (trialId) => {
+    if (!userId) {
+      console.error("User ID not available")
+      return
+    }
+    
+    try {
+      const response = await axiosInstance.post('/matches', { trial_id: trialId, user_id: userId })
+      console.log(`Matched to trial ${trialId}:`, response.data)
+      alert(`Matched to trial ${trialId}!`)
+      setClicked({ ...clicked, [trialId]: true })
+    } catch (error) {
+      console.error('Error matching user to trial:', error)
+    }
+  }
 
   // Load Pyodide
   useEffect(() => {
@@ -188,11 +222,22 @@ const VolunteerApplication = () => {
     })
   }
 
-  //modify the handleSubmit function to include the new formData object
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setUploadStatus({ isUploading: true, success: false, error: null })
-    console.log('Form Data:', formData)   
+    try {
+      console.log('Submitting application:', formData)
+      let inputData = { ...formData, files: formData.files.map(f =>  f.text) }
+      const response = await axiosInstance.post('/users/', inputData)
+      console.log('User created:', response.data)
+      
+      setMatches(response.data.matches)
+      setUserId(response.data.id)
+      
+      fetchTrials(response.data.matches) // Fetch trial details
+    } catch (error) {
+      console.error('Error submitting application:', error)
+    }
     setUploadStatus({ 
       isUploading: false, 
       success: true, 
@@ -488,6 +533,49 @@ const VolunteerApplication = () => {
               </div>
             </form>
           </div>
+          {matches.length > 0 && (
+  <div className="mt-8 p-6 bg-base-200 rounded-lg shadow-lg">
+    <h2 className="text-2xl font-bold text-center text-primary mb-4">Matched Trials</h2>
+    <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {matches.map((trialId) => (
+        <li key={trialId} className="card bg-base-100 shadow-lg rounded-lg border border-gray-200 p-6">
+              {trials[trialId] ? (
+                <div>
+                  <h3 className="text-lg font-semibold text-primary">
+                    {trials[trialId]?.title || "No Title"}
+                  </h3>
+                  <p className="text-gray-500 text-sm">
+                    {trials[trialId]?.description || "No Description"}
+                  </p>
+                  <button
+                    onClick={() => handleMatch(trialId)}
+                    disabled={clicked[trialId]}
+                    className={`mt-4 btn btn-primary btn-lg w-full ${
+                      clicked[trialId] ? "btn-disabled opacity-50 cursor-not-allowed" : ""
+                    }`}
+                  >
+                    {clicked[trialId] ? (
+                      <span className="flex items-center">
+                        <Check className="w-5 h-5 mr-2" />
+                        Matched
+                      </span>
+                    ) : (
+                      "Match"
+                    )}
+                  </button>
+                </div>
+              ) : (
+                <div className="flex justify-center items-center h-full">
+                  <Loader className="w-6 h-6 text-gray-400 animate-spin" />
+                  <p className="text-gray-400 ml-2">Loading trial info...</p>
+                </div>
+              )}
+            </li>
+          ))}
+        </ul>
+      </div>
+    )}
+
         </div>
       </div>
     </div>
