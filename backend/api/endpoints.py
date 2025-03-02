@@ -227,3 +227,12 @@ async def get_user(user_id: str):
     user_without_id = user.copy()
     del user_without_id["_id"]
     return {"message": "Get User", "user": user_without_id}
+
+@router.get("/trials/{trial_id}/info")
+async def get_trial(trial_id: str):
+    trial = await trial_collection.find_one({"_id": ObjectId(trial_id)})
+    if not trial:
+        raise HTTPException(status_code=404, detail="Trial not found")
+    trial_without_id = trial.copy()
+    del trial_without_id["_id"]
+    return {"message": "Get Trial", "user": trial_without_id}
