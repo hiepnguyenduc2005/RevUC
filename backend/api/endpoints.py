@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Query, Request
-from db.connect import org_collection, user_collection, match_collection
-from models.schema import Signup, Organization, Login, User, NewUser
+from db.connect import org_collection, user_collection, match_collection, trial_collection
+from models.schema import Signup, Organization, Login, User, NewUser, Trial
 import bcrypt
 from bson import ObjectId
 
@@ -64,12 +64,51 @@ async def create_user(user: NewUser):
     return {"message": "Create successful", "id": str(result.inserted_id)}
     
 @router.post("/trials")
-def create_trial():
-    return {"message": "Create Trial"}
+async def create_trial(trial: Trial):
+    existing_trial = await trial_collection.find_one({"title": trial.title})
+    if existing_trial:
+        raise HTTPException(status_code=400, detail="A trial with that title already exists.")
 
-@router.get("/orgs/{org_id}/")
-def get_trials_for_org(org_id: str):
-    return {"message": f"Get Trials for Organization {org_id}"}
+    new_trial = trial.dict()
+
+    result = await trial_collection.insert_one(new_trial)
+
+    return {
+        "contactName": trial.contactName,
+        "contactPhone": trial.contactPhone,
+        "title": trial.title,
+        "description": trial.description,
+        "startDate": trial.startDate,
+        "endDate": trial.endDate,
+        "compensation": trial.compensation,
+        "location": trial.location,
+        "eligibilityCriteria": trial.eligibilityCriteria,
+        "org_ID": str(trial.org_ID),
+        "id": str(result.inserted_id)
+    }
+    
+@router.get("/orgs/{org_id}")
+async def get_trials_for_org(org_id: str):
+    
+    org_exists = await org_collection.find_one({"_id": ObjectId(org_id)})
+    if not org_exists:
+        raise HTTPException(status_code=404, detail="Organization not found")
+
+    trials_cursor = trial_collection.find({"org_ID": org_id})
+    trials = await trials_cursor.to_list(length=None)
+
+
+    for trial in trials:
+        trial["_id"] = str(trial["_id"])
+
+    return {
+        "organization_id": org_id,
+        "trials": trials
+    }
+
+@router.post("/match/")
+def create_match(trial_id: str = Query(...), user_id: str = Query(...)):
+    return {"message": f"Match User {user_id} to Trial {trial_id}"}
 
 @router.get("/trials/{trial_id}")
 def get_match_for_trial(trial_id: str):
@@ -79,9 +118,7 @@ def get_match_for_trial(trial_id: str):
 def get_approve_for_trial(trial_id: str):
     return {"message": f"Get Approved Users for Trial {trial_id}"}
 
-@router.post("/match/")
-def match(trial_id: str = Query(...), user_id: str = Query(...)):
-    return {"message": f"Match User {user_id} to Trial {trial_id}"}
+
 
 @router.post("/approve/")
 def approve(match_id: str = Query(...)):
