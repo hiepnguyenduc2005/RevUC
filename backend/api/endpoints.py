@@ -142,7 +142,14 @@ async def create_match(newMatch: NewMatch):
 async def get_match_for_trial(trial_id: str):
     matches_cursor = match_collection.find({"trial_id": trial_id})
     matches = await matches_cursor.to_list(length=None)  
-    result = [{"user_id": match.get("user_id"), "match_id": str(match.get("_id"))} for match in matches]
+    result = [
+        {
+            "user_id": match.get("user_id"), 
+            "match_id": str(match.get("_id")),
+            "status": match.get("status", "pending")  # Include status field with default
+        } 
+        for match in matches
+    ]
     return {"message": "Get Users for Trial", "matches": result}
 
 @router.post("/approve/{match_id}")

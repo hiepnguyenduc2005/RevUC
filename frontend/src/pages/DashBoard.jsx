@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useAuthStore } from '../store/useAuthStore'
 import { axiosInstance } from '../lib/axios'
 import { Link } from 'react-router-dom'
-import { ChevronDown, ChevronRight, User, FileText, Check, X, AlertCircle } from 'lucide-react'
+import { ChevronDown, ChevronRight, User, FileText, Check, X, AlertCircle, Clock } from 'lucide-react'
 
 const DashBoard = () => {
   const { authOrg } = useAuthStore()
@@ -34,13 +34,16 @@ const DashBoard = () => {
                 const userResponse = await axiosInstance.get(`/users/${match.user_id}`)
                 return {
                   ...match,
-                  user: userResponse.data.user
+                  user: userResponse.data.user,
+                  // Use the status from the backend if available, default to "pending"
+                  status: match.status || "pending"
                 }
               } catch (userError) {
                 console.error(`Error fetching user for match ${match.match_id}:`, userError)
                 return {
                   ...match,
-                  user: { error: "Failed to load user data" }
+                  user: { error: "Failed to load user data" },
+                  status: match.status || "pending"
                 }
               }
             }))
@@ -84,25 +87,98 @@ const DashBoard = () => {
     })
   }
   
+  // Update the handleApproveMatch function
   const handleApproveMatch = async (matchId) => {
     try {
+      // Call the API to approve the match
       await axiosInstance.post(`/approve/${matchId}`)
-      // Refresh data after approval
-      const updatedTrials = [...trials]
+      
+      // Update the local state 
+      const updatedTrials = trials.map(trial => {
+        const updatedMatches = trial.matches.map(match => {
+          if (match.match_id === matchId) {
+            return { 
+              ...match, 
+              status: "approved" 
+            }
+          }
+          return match
+        })
+        return { ...trial, matches: updatedMatches }
+      })
+      
       setTrials(updatedTrials)
     } catch (err) {
       console.error("Error approving match:", err)
+      // Add error notification here if needed
     }
   }
-  
+
+  // Update the handleRejectMatch function similarly
   const handleRejectMatch = async (matchId) => {
     try {
+      // Call the API to reject the match
       await axiosInstance.post(`/reject/${matchId}`)
-      // Refresh data after rejection
-      const updatedTrials = [...trials]
+      
+      // Update the local state
+      const updatedTrials = trials.map(trial => {
+        const updatedMatches = trial.matches.map(match => {
+          if (match.match_id === matchId) {
+            return { 
+              ...match, 
+              status: "rejected" 
+            }
+          }
+          return match
+        })
+        return { ...trial, matches: updatedMatches }
+      })
+      
       setTrials(updatedTrials)
     } catch (err) {
       console.error("Error rejecting match:", err)
+      // Add error notification here if needed
+    }
+  }
+
+  // Helper function to get match card styling based on status
+  const getMatchCardStyle = (status) => {
+    switch(status) {
+      case 'approved':
+        return 'bg-success/10 border-l-4 border-success';
+      case 'rejected':
+        return 'bg-error/10 border-l-4 border-error';
+      case 'pending':
+      default:
+        return 'bg-base-200';
+    }
+  }
+
+  // Helper function to get status badge styling
+  const getStatusBadge = (status) => {
+    switch(status) {
+      case 'approved':
+        return (
+          <div className="badge badge-success gap-1">
+            <Check className="h-3 w-3" />
+            Approved
+          </div>
+        );
+      case 'rejected':
+        return (
+          <div className="badge badge-error gap-1">
+            <X className="h-3 w-3" />
+            Rejected
+          </div>
+        );
+      case 'pending':
+      default:
+        return (
+          <div className="badge badge-warning gap-1">
+            <Clock className="h-3 w-3" />
+            Pending
+          </div>
+        );
     }
   }
 
@@ -158,9 +234,17 @@ const DashBoard = () => {
                       </p>
                     </div>
                     <div className="flex items-center">
-                      <span className="badge badge-primary mr-2">
-                        {trial.matches?.length || 0} Matches
-                      </span>
+                      <div className="flex gap-2 mr-3">
+                        <div className="badge badge-neutral">
+                          {trial.matches?.length || 0} Total
+                        </div>
+                        <div className="badge badge-success">
+                          {trial.matches?.filter(m => m.status === 'approved').length || 0} Approved
+                        </div>
+                        <div className="badge badge-warning">
+                          {trial.matches?.filter(m => m.status === 'pending').length || 0} Pending
+                        </div>
+                      </div>
                       {expandedTrials[trial._id] ? 
                         <ChevronDown className="h-6 w-6" /> : 
                         <ChevronRight className="h-6 w-6" />
@@ -189,12 +273,28 @@ const DashBoard = () => {
                     
                     <div className="divider">Matches</div>
                     
+                    {/* Filter options for matches */}
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      <button className="btn btn-sm btn-outline">
+                        All ({trial.matches?.length || 0})
+                      </button>
+                      <button className="btn btn-sm btn-outline btn-success">
+                        Approved ({trial.matches?.filter(m => m.status === 'approved').length || 0})
+                      </button>
+                      <button className="btn btn-sm btn-outline btn-warning">
+                        Pending ({trial.matches?.filter(m => m.status === 'pending').length || 0})
+                      </button>
+                      <button className="btn btn-sm btn-outline btn-error">
+                        Rejected ({trial.matches?.filter(m => m.status === 'rejected').length || 0})
+                      </button>
+                    </div>
+                    
                     {trial.matches && trial.matches.length > 0 ? (
                       <div className="space-y-3">
                         {trial.matches.map((match) => (
                           <div 
                             key={match.match_id} 
-                            className="bg-base-200 rounded-lg p-4"
+                            className={`rounded-lg p-4 ${getMatchCardStyle(match.status)}`}
                           >
                             <div 
                               className="flex justify-between items-center cursor-pointer" 
@@ -205,30 +305,50 @@ const DashBoard = () => {
                                 <span className="font-medium">
                                   {match.user?.name || 'Unknown Volunteer'}
                                 </span>
+                                <span className="ml-3">
+                                  {getStatusBadge(match.status)}
+                                </span>
                               </div>
                               <div className="flex items-center">
-                                <div className="flex space-x-2 mr-4">
-                                  <button 
-                                    className="btn btn-sm btn-success" 
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleApproveMatch(match.match_id);
-                                    }}
-                                  >
-                                    <Check className="h-4 w-4" />
-                                    Approve
-                                  </button>
-                                  <button 
-                                    className="btn btn-sm btn-error" 
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleRejectMatch(match.match_id);
-                                    }}
-                                  >
-                                    <X className="h-4 w-4" />
-                                    Reject
-                                  </button>
-                                </div>
+                                {/* Only show action buttons for pending matches */}
+                                {match.status === 'pending' && (
+                                  <div className="flex space-x-2 mr-4">
+                                    <button 
+                                      className="btn btn-sm btn-success" 
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleApproveMatch(match.match_id);
+                                      }}
+                                    >
+                                      <Check className="h-4 w-4" />
+                                      Approve
+                                    </button>
+                                    <button 
+                                      className="btn btn-sm btn-error" 
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleRejectMatch(match.match_id);
+                                      }}
+                                    >
+                                      <X className="h-4 w-4" />
+                                      Reject
+                                    </button>
+                                  </div>
+                                )}
+                                
+                                {/* For approved/rejected matches, show action taken */}
+                                {match.status === 'approved' && (
+                                  <div className="text-success mr-4 text-sm italic">
+                                    Approved
+                                  </div>
+                                )}
+                                
+                                {match.status === 'rejected' && (
+                                  <div className="text-error mr-4 text-sm italic">
+                                    Rejected
+                                  </div>
+                                )}
+                                
                                 {expandedMatches[match.match_id] ? 
                                   <ChevronDown className="h-5 w-5" /> : 
                                   <ChevronRight className="h-5 w-5" />
