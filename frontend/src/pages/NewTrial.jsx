@@ -1,8 +1,12 @@
 import React, { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuthStore } from '../store/useAuthStore' 
+import { axiosInstance } from '../lib/axios'
+import { AlertCircle } from 'lucide-react'
 
 const NewTrial = () => {
     const navigate = useNavigate()
+    const { authOrg } = useAuthStore()
     const selectRef = useRef(null)
     const [formData, setFormData] = useState({
         title: '',
@@ -16,6 +20,9 @@ const NewTrial = () => {
         eligibilityCriteria: []
     })
     const [selectedCriteria, setSelectedCriteria] = useState([])
+    const [isSubmitting, setIsSubmitting] = useState(false)
+    const [error, setError] = useState(null)
+    const [success, setSuccess] = useState(false)
 
     const handleInputChange = (e) => {
         const { name, value } = e.target
@@ -23,6 +30,8 @@ const NewTrial = () => {
             ...formData,
             [name]: value
         })
+        // Clear any errors when user makes changes
+        if (error) setError(null)
     }
 
     const handlePhoneChange = (e) => {
@@ -33,6 +42,8 @@ const NewTrial = () => {
                 contactPhone: value
             })
         }
+        // Clear any errors when user makes changes
+        if (error) setError(null)
     }
 
     const handleCriteriaChange = (e) => {
@@ -49,6 +60,8 @@ const NewTrial = () => {
                 selectRef.current.value = ""
             }
         }
+        // Clear any errors when user makes changes
+        if (error) setError(null)
     }
 
     const handleReset = () => {
@@ -64,15 +77,79 @@ const NewTrial = () => {
             eligibilityCriteria: []
         });
         setSelectedCriteria([]);
+        setError(null);
+        setSuccess(false);
         // Reset the dropdown to default option
         if (selectRef.current) {
             selectRef.current.value = ""
         }
     }
 
-    const handleSubmit = () => {
-        // Add your submit logic here
-        console.log('Form submitted:', formData);
+    const validateForm = () => {
+        const requiredFields = ['title', 'contactName', 'contactPhone', 'description', 'startDate', 'endDate', 'location']
+        const missingFields = requiredFields.filter(field => !formData[field])
+        
+        if (missingFields.length > 0) {
+            const fieldNames = missingFields.map(field => {
+                switch(field) {
+                    case 'title': return 'Trial Title';
+                    case 'contactName': return 'Contact Name';
+                    case 'contactPhone': return 'Contact Phone';
+                    case 'description': return 'Description';
+                    case 'startDate': return 'Start Date';
+                    case 'endDate': return 'End Date';
+                    case 'location': return 'Location';
+                    default: return field;
+                }
+            });
+            setError(`Please fill in the following required fields: ${fieldNames.join(', ')}`);
+            return false;
+        }
+
+        if (new Date(formData.startDate) > new Date(formData.endDate)) {
+            setError('End date cannot be before start date');
+            return false;
+        }
+
+        return true;
+    }
+
+    const handleSubmit = async () => {
+        if (!validateForm()) return;
+        
+        // Check if user is authenticated and has an organization ID
+        if (!authOrg || !authOrg.id) {
+            setError('You must be logged in to create a trial');
+            return;
+        }
+        
+        setIsSubmitting(true);
+        setError(null);
+        
+        try {
+            // Prepare data for API call by adding the organization ID
+            const trialData = {
+                ...formData,
+                org_ID: authOrg.id
+            };
+
+            // Call the API to create the trial
+            const response = await axiosInstance.post('/trials', trialData);
+            
+            console.log('Trial created:', response.data);
+            setSuccess(true);
+            
+            // Redirect to dashboard after success, with a slight delay to show success message
+            setTimeout(() => {
+                navigate('/dashboard');
+            }, 2000);
+        } catch (err) {
+            const errorMessage = err.response?.data?.detail || 'Failed to create trial. Please try again.';
+            console.error('Error creating trial:', err);
+            setError(errorMessage);
+        } finally {
+            setIsSubmitting(false);
+        }
     }
 
     const handleReturn = () => {
@@ -83,6 +160,22 @@ const NewTrial = () => {
         <div className="h-screen flex flex-col" style={{ overflow: 'hidden' }}>
             <div className="flex-grow bg-base-200 pt-2 pb-16" style={{ overflow: 'hidden' }}>
                 <div className="container mx-auto px-4 h-full" style={{ overflow: 'hidden' }}>
+                    {/* Success message */}
+                    {success && (
+                        <div className="alert alert-success mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            <span>Trial created successfully! Redirecting to dashboard...</span>
+                        </div>
+                    )}
+                    
+                    {/* Error message */}
+                    {error && (
+                        <div className="alert alert-error mb-4">
+                            <AlertCircle className="h-6 w-6" />
+                            <span>{error}</span>
+                        </div>
+                    )}
+                    
                     <div className="grid grid-cols-4 gap-8 max-w-8xl w-full h-full" style={{ overflow: 'hidden' }}>
                         <div className="col-span-2 flex flex-col gap-4 h-full" style={{ overflow: 'hidden' }}>
                             {/* Trial Title */}
@@ -279,20 +372,23 @@ const NewTrial = () => {
                 <button 
                     onClick={handleReturn}
                     className="btn btn-outline"
+                    disabled={isSubmitting}
                 >
                     Back
                 </button>
                 <button 
                     onClick={handleReset}
                     className="btn btn-error"
+                    disabled={isSubmitting}
                 >
                     Reset
                 </button>
                 <button 
                     onClick={handleSubmit}
-                    className="btn btn-primary"
+                    className={`btn btn-primary ${isSubmitting ? 'loading' : ''}`}
+                    disabled={isSubmitting}
                 >
-                    Submit
+                    {isSubmitting ? 'Creating...' : 'Submit'}
                 </button>
             </div>
         </div>
