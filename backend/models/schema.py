@@ -36,7 +36,6 @@ class Login(BaseModel):
 
 class Signup(BaseModel):
     name: str
-    username: str
     password: str
     email: EmailStr
 
