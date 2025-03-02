@@ -1,4 +1,5 @@
 from pydantic import BaseModel, EmailStr
+from bson import ObjectId
 from typing import Literal, List
 
 class User(BaseModel):
@@ -7,18 +8,19 @@ class User(BaseModel):
     report: str
 
 class Trial(BaseModel):
-    org_id: str
+    contactName: str
+    contactPhone: str
     title: str
     description: str
-    eligibility: str
-    start_date: str
-    end_date: str
+    startDate: str
+    endDate: str
     compensation: str
     location: str
+    eligibilityCriteria: list
+    org_ID: str
 
 class Organization(BaseModel):
     name: str
-    username: str
     password: str
     email: EmailStr
     trials: List[Trial] = []
@@ -29,12 +31,11 @@ class Match(BaseModel):
     status: Literal["pending", "approved", "rejected"]
 
 class Login(BaseModel):
-    username: str
+    email: str
     password: str
 
 class Signup(BaseModel):
     name: str
-    username: str
     password: str
     email: EmailStr
 
