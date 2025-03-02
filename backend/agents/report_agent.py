@@ -86,7 +86,7 @@ def report_node(state: AgentState):
 
 def should_continue(state: AgentState):
     print("should_continue")
-    redo_clean = state.get("redo_clean", False)
+    redo_clean = state.get("redo_clean", False) and state.get("critique_count", 0) < 1
     if redo_clean:
         return "clean"
     return "report"

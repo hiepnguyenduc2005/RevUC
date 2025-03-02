@@ -68,7 +68,7 @@ async def create_user(user: User):
         report=user.report
     ).dict()
     result = await user_collection.insert_one(new_user)
-    print(result)
+    # print(result)
     return {"message": "Create successful", "id": str(result.inserted_id)}
     
 @router.post("/trials")
@@ -82,7 +82,7 @@ async def create_trial(trial: Trial):
     trial_id = str(result.inserted_id)
     collection.add(
         ids=[trial_id],  
-        documents=[str(result)]  
+        documents=[str(trial.dict())]  
     )
     num_docs = collection.count()
     print(f"Trial {trial_id} inserted into ChromaDB. Number of documents: {num_docs}")
@@ -130,6 +130,9 @@ async def volunteer_submission(user: Volunteer):
         "report_text": ""
     }
     state = report_graph.invoke(initial_state)
+    print(state)
+    # sleep_time = 15
+    # await asyncio.sleep(sleep_time)
     cleaned_info = state.get("cleanedInfo")
     report_text = state.get("report_text")
     updated_user = user.dict()
@@ -139,7 +142,8 @@ async def volunteer_submission(user: Volunteer):
         email=user.email,
         report=report_text
     )
-    await create_user(user_to_create)
+    user = await create_user(user_to_create)
+    print('g')
     new_state = {
         "volunteerInfo": updated_user,
         "report_text": report_text,
@@ -154,7 +158,8 @@ async def volunteer_submission(user: Volunteer):
     return {
         "message": "Volunteer Submission",
         "matches": matched_ids,
-        "explanation": explanation
+        "explanation": explanation,
+        "id": str(user["id"])
     }
 
 @router.post("/matches")
