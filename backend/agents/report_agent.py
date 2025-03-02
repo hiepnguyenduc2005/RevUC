@@ -110,18 +110,18 @@ report_graph_agent.add_edge("report", END)
 # TEXT = open("test.txt", "r").read()
 # initial_state = {
 #     "originalInfo": Volunteer(
-#         name="John Doe",
-#         email="johndoe@mail.com",
-#         phone="123-456-7890",
-#         dateOfBirth="01/01/2000",  
-#         gender="male",
-#         height="170",
-#         weight="70",
-#         medicalConditions="None",
-#         medications="None",
-#         allergies="None",
-#         pastSurgeries="None",
-#         files=[TEXT]
+        # name="John Doe",
+        # email="johndoe@mail.com",
+        # phone="123-456-7890",
+        # dateOfBirth="01/01/2000",  
+        # gender="male",
+        # height="170",
+        # weight="70",
+        # medicalConditions="None",
+        # medications="None",
+        # allergies="None",
+        # pastSurgeries="None",
+        # files=[TEXT]
 #     ),
 #     "cleanedInfo": "",
 #     "report_text": "",

@@ -33,7 +33,7 @@ class AgentState(TypedDict):
 def matching_node(state: AgentState):
     print("matching_node")
     volunteerInfo = state.get("volunteerInfo", "")
-    PROMPT = "Please find the up to 5 trials that match the volunteer information. {volunteerInfo}"
+    PROMPT = "Please find the compatible trials (max 5) that match the volunteer information. {volunteerInfo}"
     result = collection.query(
         query_texts = [PROMPT.format(volunteerInfo=volunteerInfo)],
         n_results = 5,

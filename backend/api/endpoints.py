@@ -1,11 +1,20 @@
 from fastapi import APIRouter, HTTPException, Query, Request
 from db.connect import org_collection, user_collection, match_collection, trial_collection
-from models.schema import Signup, Organization, Login, User, NewUser, Trial, Match, NewMatch
+from models.schema import Signup, Organization, Login, User, NewUser, Trial, Match, NewMatch, Volunteer
 import bcrypt
 from bson import ObjectId
+from agents.report_agent import report_graph_agent
+from agents.matching_agent import matching_graph_agent
+import chromadb
+import os
+import asyncio
 
+storage_path = os.path.join(os.getcwd(), "db")
+if storage_path is None:
+    raise ValueError("STORAGE_PATH environment variable is not set")
+client = chromadb.PersistentClient(path=storage_path)
+collection = client.get_or_create_collection(name="revuc")
 router = APIRouter()
-
 
 @router.get("/")
 def get_root():
@@ -47,8 +56,8 @@ async def signup_org(org: Signup):
     result = await org_collection.insert_one(new_org)
     return {"name": org.name, "email": org.email, "id": str(result.inserted_id)}
 
-@router.post("/create-user")
-async def create_user(user: NewUser):
+# @router.post("/create-user")
+async def create_user(user: User):
     existing_user = await user_collection.find_one({"email": user.email})
     if existing_user:
         return {"message": "User already exists", "id": str(existing_user["_id"])}
@@ -56,7 +65,7 @@ async def create_user(user: NewUser):
     new_user = User(
         name=user.name,
         email=user.email,
-        report=""
+        report=user.report
     ).dict()
     result = await user_collection.insert_one(new_user)
     print(result)
@@ -69,9 +78,14 @@ async def create_trial(trial: Trial):
         raise HTTPException(status_code=400, detail="A trial with that title already exists.")
 
     new_trial = trial.dict()
-
     result = await trial_collection.insert_one(new_trial)
-
+    trial_id = str(result.inserted_id)
+    collection.add(
+        ids=[trial_id],  
+        documents=[str(result)]  
+    )
+    num_docs = collection.count()
+    print(f"Trial {trial_id} inserted into ChromaDB. Number of documents: {num_docs}")
     return {
         "contactName": trial.contactName,
         "contactPhone": trial.contactPhone,
@@ -105,7 +119,45 @@ async def get_trials_for_org(org_id: str):
         "trials": trials
     }
 
-# @router.post("/test")
+@router.post("/users/")
+async def volunteer_submission(user: Volunteer):
+    report_graph = report_graph_agent.compile()
+    initial_state = {
+        "originalInfo": user,
+        "cleanedInfo": "",
+        "critique_count": 0,
+        "redo_clean": False,
+        "report_text": ""
+    }
+    state = report_graph.invoke(initial_state)
+    cleaned_info = state.get("cleanedInfo")
+    report_text = state.get("report_text")
+    updated_user = user.dict()
+    updated_user["cleanedInfo"] = cleaned_info
+    user_to_create = User(
+        name=user.name,
+        email=user.email,
+        report=report_text
+    )
+    await create_user(user_to_create)
+    new_state = {
+        "volunteerInfo": updated_user,
+        "report_text": report_text,
+        "matches_id": [],
+        "matches_documents": [],
+        "explanation": ""
+    }
+    matching_graph = matching_graph_agent.compile()
+    final_state = matching_graph.invoke(new_state)
+    matched_ids = final_state.get("matches_id")
+    explanation = final_state.get("explanation")
+    return {
+        "message": "Volunteer Submission",
+        "matches": matched_ids,
+        "explanation": explanation
+    }
+
+@router.post("/matches")
 async def create_match(newMatch: NewMatch):
     trial_id = newMatch.trial_id
     user_id = newMatch.user_id
