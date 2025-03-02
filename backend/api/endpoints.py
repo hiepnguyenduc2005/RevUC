@@ -144,7 +144,7 @@ async def get_match_for_trial(trial_id: str):
         {
             "user_id": match.get("user_id"), 
             "match_id": str(match.get("_id")),
-            "status": match.get("status", "pending")  # Include status field with default
+            "status": match.get("status", "pending")  
         } 
         for match in matches
     ]
