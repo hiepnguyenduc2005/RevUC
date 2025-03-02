@@ -5,9 +5,14 @@ const NewTrial = () => {
     const navigate = useNavigate()
     const selectRef = useRef(null)
     const [formData, setFormData] = useState({
+        title: '',
         contactName: '',
         contactPhone: '',
         description: '',
+        startDate: '',
+        endDate: '',
+        location: '',
+        compensation: '',
         eligibilityCriteria: []
     })
     const [selectedCriteria, setSelectedCriteria] = useState([])
@@ -48,9 +53,14 @@ const NewTrial = () => {
 
     const handleReset = () => {
         setFormData({
+            title: '',
             contactName: '',
             contactPhone: '',
             description: '',
+            startDate: '',
+            endDate: '',
+            location: '',
+            compensation: '',
             eligibilityCriteria: []
         });
         setSelectedCriteria([]);
@@ -74,9 +84,32 @@ const NewTrial = () => {
             <div className="flex-grow bg-base-200 pt-2 pb-16" style={{ overflow: 'hidden' }}>
                 <div className="container mx-auto px-4 h-full" style={{ overflow: 'hidden' }}>
                     <div className="grid grid-cols-4 gap-8 max-w-8xl w-full h-full" style={{ overflow: 'hidden' }}>
-                        <div className="col-span-2 flex flex-col gap-8 h-full" style={{ overflow: 'hidden' }}>
-                            <div className="card bg-base-100 shadow-xl" style={{ height: "calc(40% - 1rem)", overflow: 'hidden' }}>
-                                <div className="card-body p-6" style={{ overflow: 'hidden' }}>
+                        <div className="col-span-2 flex flex-col gap-4 h-full" style={{ overflow: 'hidden' }}>
+                            {/* Trial Title */}
+                            <div className="card bg-base-100 shadow-xl" style={{ overflow: 'hidden' }}>
+                                <div className="card-body p-4" style={{ overflow: 'hidden' }}>
+                                    <h2 className="card-title justify-center text-2xl font-bold mb-2">Trial Information</h2>
+                                    <div className="flex gap-4" style={{ overflow: 'hidden' }}>
+                                        <div className="flex-1" style={{ overflow: 'hidden' }}>
+                                            <fieldset className="border rounded-lg p-3" style={{ overflow: 'hidden' }}>
+                                                <legend className="text-lg font-semibold px-2">Trial Title</legend>
+                                                <input 
+                                                    type="text" 
+                                                    name="title"
+                                                    className="input input-bordered input-md w-full text-md py-1" 
+                                                    placeholder="Enter trial title"
+                                                    value={formData.title}
+                                                    onChange={handleInputChange}
+                                                />
+                                            </fieldset>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            {/* Contact Information */}
+                            <div className="card bg-base-100 shadow-xl" style={{ overflow: 'hidden' }}>
+                                <div className="card-body p-4" style={{ overflow: 'hidden' }}>
                                     <h2 className="card-title justify-center text-2xl font-bold mb-2">Contact Information</h2>
                                     <div className="flex gap-4" style={{ overflow: 'hidden' }}>
                                         <div className="flex-1" style={{ overflow: 'hidden' }}>
@@ -94,7 +127,7 @@ const NewTrial = () => {
                                         </div>
                                         <div className="flex-1" style={{ overflow: 'hidden' }}>
                                             <fieldset className="border rounded-lg p-3" style={{ overflow: 'hidden' }}>
-                                                <legend className="text-lg font-semibold px-2">Contact Person's Phone</legend>
+                                                <legend className="text-lg font-semibold px-2">Contact Phone</legend>
                                                 <input 
                                                     type="tel"
                                                     name="contactPhone"
@@ -110,12 +143,73 @@ const NewTrial = () => {
                                     </div>
                                 </div>
                             </div>
-                            <div className="card bg-base-100 shadow-xl" style={{ height: "calc(60% - 1rem)", overflow: 'hidden' }}>
-                                <div className="card-body p-6" style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                            
+                            {/* Time, Location and Compensation */}
+                            <div className="card bg-base-100 shadow-xl" style={{ overflow: 'hidden' }}>
+                                <div className="card-body p-4" style={{ overflow: 'hidden' }}>
+                                    <h2 className="card-title justify-center text-2xl font-bold mb-2">Trial Details</h2>
+                                    <div className="grid grid-cols-2 gap-4" style={{ overflow: 'hidden' }}>
+                                        <div style={{ overflow: 'hidden' }}>
+                                            <fieldset className="border rounded-lg p-3" style={{ overflow: 'hidden' }}>
+                                                <legend className="text-lg font-semibold px-2">Start Date</legend>
+                                                <input 
+                                                    type="date" 
+                                                    name="startDate"
+                                                    className="input input-bordered input-md w-full text-md py-1" 
+                                                    value={formData.startDate}
+                                                    onChange={handleInputChange}
+                                                />
+                                            </fieldset>
+                                        </div>
+                                        <div style={{ overflow: 'hidden' }}>
+                                            <fieldset className="border rounded-lg p-3" style={{ overflow: 'hidden' }}>
+                                                <legend className="text-lg font-semibold px-2">End Date</legend>
+                                                <input 
+                                                    type="date" 
+                                                    name="endDate"
+                                                    className="input input-bordered input-md w-full text-md py-1" 
+                                                    value={formData.endDate}
+                                                    onChange={handleInputChange}
+                                                />
+                                            </fieldset>
+                                        </div>
+                                        <div style={{ overflow: 'hidden' }}>
+                                            <fieldset className="border rounded-lg p-3" style={{ overflow: 'hidden' }}>
+                                                <legend className="text-lg font-semibold px-2">Location</legend>
+                                                <input 
+                                                    type="text" 
+                                                    name="location"
+                                                    className="input input-bordered input-md w-full text-md py-1" 
+                                                    placeholder="Enter location"
+                                                    value={formData.location}
+                                                    onChange={handleInputChange}
+                                                />
+                                            </fieldset>
+                                        </div>
+                                        <div style={{ overflow: 'hidden' }}>
+                                            <fieldset className="border rounded-lg p-3" style={{ overflow: 'hidden' }}>
+                                                <legend className="text-lg font-semibold px-2">Compensation</legend>
+                                                <input 
+                                                    type="text" 
+                                                    name="compensation"
+                                                    className="input input-bordered input-md w-full text-md py-1" 
+                                                    placeholder="e.g. $500, Gift Cards"
+                                                    value={formData.compensation}
+                                                    onChange={handleInputChange}
+                                                />
+                                            </fieldset>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            {/* Eligibility */}
+                            <div className="card bg-base-100 shadow-xl flex-grow" style={{ overflow: 'hidden' }}>
+                                <div className="card-body p-4" style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                                     <h2 className="card-title justify-center text-2xl font-bold mb-2">Eligibility</h2>
                                     <div className="flex gap-4 flex-grow" style={{ overflow: 'hidden' }}>
                                         <div className="flex-1" style={{ overflow: 'hidden', maxWidth: '40%' }}>
-                                            <fieldset className="border rounded-lg p-3" style={{ overflow: 'hidden' }}>
+                                            <fieldset className="border rounded-lg p-3 h-full" style={{ overflow: 'hidden' }}>
                                                 <legend className="text-lg font-semibold px-2">Including</legend>
                                                 <select 
                                                     ref={selectRef}
@@ -133,7 +227,6 @@ const NewTrial = () => {
                                                     <option value="BMI Under 30">BMI Under 30</option>
                                                     <option value="No Chronic Illnesses">No Chronic Illnesses</option>
                                                     <option value="No Substance Abuse History">No Substance Abuse History</option>
-
                                                 </select>
                                             </fieldset>
                                         </div>
@@ -153,6 +246,8 @@ const NewTrial = () => {
                                 </div>
                             </div>
                         </div>
+                        
+                        {/* Description */}
                         <div className="col-span-2 h-full" style={{ overflow: 'hidden' }}>
                             <div className="card bg-base-100 shadow-xl h-full" style={{ overflow: 'hidden' }}>
                                 <div className="card-body p-6 flex flex-col" style={{ overflow: 'hidden' }}>
@@ -164,10 +259,10 @@ const NewTrial = () => {
                                                 <textarea 
                                                     name="description"
                                                     className="textarea textarea-bordered w-full text-md py-1 flex-grow"
-                                                    placeholder="Enter description here..."
+                                                    placeholder="Enter detailed description of the trial here..."
                                                     value={formData.description}
                                                     onChange={handleInputChange}
-                                                    style={{ resize: 'none', overflow: 'hidden' }}
+                                                    style={{ resize: 'none' }}
                                                 />
                                             </fieldset>
                                         </div>
@@ -181,6 +276,12 @@ const NewTrial = () => {
             
             {/* Stationary buttons without a bar */}
             <div className="fixed bottom-4 right-4 flex gap-4">
+                <button 
+                    onClick={handleReturn}
+                    className="btn btn-outline"
+                >
+                    Back
+                </button>
                 <button 
                     onClick={handleReset}
                     className="btn btn-error"
