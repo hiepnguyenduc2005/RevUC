@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Query, Request
 from db.connect import org_collection, user_collection, match_collection, trial_collection
-from models.schema import Signup, Organization, Login, User, NewUser, Trial
+from models.schema import Signup, Organization, Login, User, NewUser, Trial, Match, NewMatch
 import bcrypt
 from bson import ObjectId
 
@@ -106,24 +106,67 @@ async def get_trials_for_org(org_id: str):
         "trials": trials
     }
 
-@router.post("/match/")
-def create_match(trial_id: str = Query(...), user_id: str = Query(...)):
-    return {"message": f"Match User {user_id} to Trial {trial_id}"}
+@router.post("/test")
+async def create_match(newMatch: NewMatch):
+    trial_id = newMatch.trial_id
+    user_id = newMatch.user_id
+    try:
+        trial = await trial_collection.find_one({"_id": ObjectId(trial_id)})
+        if not trial:
+            raise Exception("Trial not found")
+
+        user = await user_collection.find_one({"_id": ObjectId(user_id)})
+        if not user:
+            raise Exception("User not found")
+
+        existing_match = await match_collection.find_one({"trial_id": trial_id, "user_id": user_id})
+        if existing_match:
+            raise Exception("Match already exists")
+
+        match_doc = Match(
+            trial_id= trial_id,
+            user_id=user_id,
+            status="pending"  
+        ).dict()
+
+        result = await match_collection.insert_one(match_doc)
+        return {"message": "Match created", "id": str(result.inserted_id) }
+
+    except Exception as e:
+        print(e)
+        return {"message": str(e)}
+
+
 
 @router.get("/trials/{trial_id}")
-def get_match_for_trial(trial_id: str):
-    return {"message": f"Get Matched Users for Trial {trial_id}"}
+async def get_match_for_trial(trial_id: str):
+    matches_cursor = match_collection.find({"trial_id": trial_id})
+    matches = await matches_cursor.to_list(length=None)  
+    result = [{"user_id": match.get("user_id"), "match_id": str(match.get("_id"))} for match in matches]
+    return {"message": "Get Users for Trial", "matches": result}
 
-@router.get("/trials/{trial_id}/approved")
-def get_approve_for_trial(trial_id: str):
-    return {"message": f"Get Approved Users for Trial {trial_id}"}
+@router.post("/approve/{match_id}")
+async def approve(match_id: str):
+    match = await match_collection.find_one({"_id": ObjectId(match_id)})
+    if not match:
+        raise HTTPException(status_code=404, detail="Match not found")
+    await match_collection.update_one({"_id": ObjectId(match_id)}, {"$set": {"status": "approved"}})
 
-
-
-@router.post("/approve/")
-def approve(match_id: str = Query(...)):
     return {"message": f"Approved Match {match_id}"}
 
-@router.post("/reject/")
-def reject(match_id: str = Query(...)):
+@router.post("/reject/{match_id}")
+async def reject(match_id: str):
+    match = await match_collection.find_one({"_id": ObjectId(match_id)})
+    if not match:
+        raise HTTPException(status_code=404, detail="Match not found")
+    await match_collection.update_one({"_id": ObjectId(match_id)}, {"$set": {"status": "rejected"}})
     return {"message": f"Rejected Match {match_id}"}
+
+@router.get("/users/{user_id}")
+async def get_user(user_id: str):
+    user = await user_collection.find_one({"_id": ObjectId(user_id)})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    user_without_id = user.copy()
+    del user_without_id["_id"]
+    return {"message": "Get User", "user": user_without_id}

@@ -44,3 +44,8 @@ class Signup(BaseModel):
 class NewUser(BaseModel):
     name: str
     email: EmailStr
+
+
+class NewMatch(BaseModel):
+	trial_id: str
+	user_id: str
