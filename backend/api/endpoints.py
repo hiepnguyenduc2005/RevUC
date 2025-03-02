@@ -17,41 +17,40 @@ def hash_password(password: str) -> str:
 
 @router.post("/login-org")
 async def login_org(org: Login):
-    username = org.username
+    email = org.email
     password = org.password
 
-    user = await org_collection.find_one({"username": username})
+    user = await org_collection.find_one({"email": email})
     if not user:
         raise HTTPException(status_code=400, detail="Invalid information")
     
     if not bcrypt.checkpw(password.encode(), user["password"].encode()):
         raise HTTPException(status_code=400, detail="Invalid information")
     
-    return {"message": "Login successful"}
+    return {"name": user["name"], "email": user["email"], "id": str(user["_id"])}
 
 
 @router.post("/signup-org")
 async def signup_org(org: Signup):
-    # TODO
-    existing_user = await org_collection.find_one({"$or": [{"username": org.username}, {"email": org.email}]})
+    existing_user = await org_collection.find_one({"email": org.email})
     if existing_user:
-        raise HTTPException(status_code=400, detail="Username or Email already exists.")
+        raise HTTPException(status_code=400, detail="Email already exists.")
 
     hashed_password = hash_password(org.password)
 
     new_org = Organization(
         name=org.name,
-        username=org.username,
         password=hashed_password,
         email=org.email,
         trials=[]
     ).dict()
 
     result = await org_collection.insert_one(new_org)
-    return {"message": "Signup successful", "org_id": str(result.inserted_id)}
+    return {"name": org.name, "email": org.email, "id": str(result.inserted_id)}
 
 def create_user(user):
     # TODO
+
     return user_collection.insert_one(user)
 
 @router.post("/trials")
