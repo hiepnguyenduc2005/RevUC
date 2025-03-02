@@ -4,6 +4,7 @@ from typing import Literal, List
 class User(BaseModel):
     name: str
     email: EmailStr
+    report: str
 
 class Trial(BaseModel):
     org_id: str
@@ -36,3 +37,26 @@ class Signup(BaseModel):
     username: str
     password: str
     email: EmailStr
+
+class NewUser(BaseModel):
+    name: str
+    email: EmailStr
+
+class Volunteer(BaseModel):
+    name: str
+    email: EmailStr
+    phone: str
+    dateOfBirth: str
+    gender: str
+    height: str
+    weight: str
+    medicalConditions: str
+    medications: str
+    allergies: str
+    pastSurgeries: str
+    files: List[str]
+
+
+class NewMatch(BaseModel):
+	trial_id: str
+	user_id: str
