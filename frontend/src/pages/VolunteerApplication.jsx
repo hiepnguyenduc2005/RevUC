@@ -188,20 +188,17 @@ const VolunteerApplication = () => {
     })
   }
 
+  //modify the handleSubmit function to include the new formData object
   const handleSubmit = (e) => {
     e.preventDefault()
     setUploadStatus({ isUploading: true, success: false, error: null })
-    
-    // Simulate API call
-    setTimeout(() => {
-      console.log('Form Data:', formData)
-      console.log('Files:', files)
-      setUploadStatus({ 
-        isUploading: false, 
-        success: true, 
-        error: null 
-      })
-    }, 2000)
+    console.log('Form Data:', formData)   
+    setUploadStatus({ 
+      isUploading: false, 
+      success: true, 
+      error: null 
+    })
+  
   }
 
   const getFileIcon = (fileType) => {
